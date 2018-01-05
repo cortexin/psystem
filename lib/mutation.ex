@@ -1,12 +1,31 @@
 defmodule Mutation do
   def mutate(state=%Membrane{children: cs}) do
-    case Enum.random(1..10) do
+    case Enum.random(1..100) do
+      x when x > 95 -> endocytosis(state)
+      x when x > 90 -> exocytosis(state)
       x when x > 1 -> mutate_reaction(state)
       x when x > 5 -> spawn_child(state)
       x when x > 6 and length(cs) -> dissolve_child(state)
       _ -> %{}
     end
   end
+
+  ### PHAGOCYTOSIS
+  defp endocytosis(%{children: children}) when length(children) > 1 do
+    [child, acceptor] = Enum.take_random(children, 2)
+    send acceptor, {:add_child, child}
+
+    %{children: List.delete(children, child)}
+  end
+  defp endocytosis(_), do: %{}
+
+  defp exocytosis(%{children: children, parent: parent}) when length(children) and is_atom(parent) do
+    child = Enum.random(children)
+    send parent, {:child_exo, child}
+
+    %{children: List.delete(children, child)}
+  end
+  defp exocytosis(_), do: %{}
 
   #### CHILD MUTATIONS
   defp spawn_child(state) do
@@ -68,12 +87,16 @@ defmodule Mutation do
     with_modes = for m <- modes, into: %{} do
       {m, %{}}
     end
-    IO.inspect ["MODES ", with_modes]
     Enum.reduce(products, with_modes,
       fn ({name, amount}, acc) -> Map.update!(acc, Enum.random(modes), &(Map.put(&1, name, amount))) end
     )
   end
 
+  @doc"""
+  Get the list of the allowed modes for a
+  given membrane. `in`-mode is disallowed if there are no
+  children.
+  """
   defp possible_modes(%{children: cs}) do
     case cs do
       [] -> [:here, :out]

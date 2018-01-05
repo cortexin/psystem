@@ -28,7 +28,9 @@ defmodule Membrane do
       {:query, from} ->
         send from, {state}
         membrane(state)
+
+      {:add_child, child} ->
+        membrane(%{state | children: [child | state.children]})
     end
   end
-
 end
