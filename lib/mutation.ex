@@ -3,12 +3,22 @@ defmodule Mutation do
     case Enum.random(1..100) do
       x when x > 95 -> endocytosis(state)
       x when x > 90 -> exocytosis(state)
+      x when x > 85 -> merge_children(state)
       x when x > 1 -> mutate_reaction(state)
       x when x > 5 -> spawn_child(state)
       x when x > 6 and length(cs) -> dissolve_child(state)
       _ -> %{}
     end
   end
+
+  ### MERGE/DIVIDE
+  defp merge_children(%{children: children}) when length(children) > 1 do
+    [child1, child2] = Enum.take_random(children, 2)
+    send child2, {:query_merge, child1}
+
+    %{children: List.delete(children, child1)}
+  end
+  defp merge_children(_), do: %{}
 
   ### PHAGOCYTOSIS
   defp endocytosis(%{children: children}) when length(children) > 1 do

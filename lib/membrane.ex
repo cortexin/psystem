@@ -29,6 +29,16 @@ defmodule Membrane do
         send from, {state}
         membrane(state)
 
+      {:query_merge, from} ->
+        # no restart
+        send from {:reply_merge, state}
+
+      {:reply_merge, merged_state} ->
+        membrane(%{state |
+                   children: state.children ++ merged_state.children,
+                   content:  Utils.merge_add(state.content, merged_state.content)
+                  })
+
       {:add_child, child} ->
         membrane(%{state | children: [child | state.children]})
     end
