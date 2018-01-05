@@ -4,6 +4,7 @@ defmodule Mutation do
       x when x > 95 -> endocytosis(state)
       x when x > 90 -> exocytosis(state)
       x when x > 85 -> merge_children(state)
+      x when x > 80 -> divide_self(state)
       x when x > 1 -> mutate_reaction(state)
       x when x > 5 -> spawn_child(state)
       x when x > 6 and length(cs) -> dissolve_child(state)
@@ -19,6 +20,17 @@ defmodule Mutation do
     %{children: List.delete(children, child1)}
   end
   defp merge_children(_), do: %{}
+
+  defp divide_self(state=%{skin?: skin?}) when not skin? do
+    {children1, children2} = Enum.split(state.children, Enum.random(1..length(state.children)))
+    {content1, content2} = Enum.split(state.content, Enum.random(1..Map.size(state.content)))
+
+    split1 = %{state | content: content1, children: children1} |> Membrane.init
+    split2 = %{state | content: content2, children: children2} |> Membrane.init
+
+    send state.parent, {:division_notice, self(), [split1, split2]}
+  end
+  defp divide_self(_), do: %{}
 
   ### PHAGOCYTOSIS
   defp endocytosis(%{children: children}) when length(children) > 1 do

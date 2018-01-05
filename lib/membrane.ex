@@ -9,13 +9,21 @@ defmodule Membrane do
 
   def compounds, do: [:a, :b, :c, :d, :e]
 
-  def init(), do: spawn_link(fn -> membrane(%Membrane{parent: self(), skin?: true}) end)
+  def init(), do: init(%{parent: self(), skin?: true})
+  def init(state), do: spawn_link(fn -> Map.merge(%Membrane{}, state) end)
 
   defp membrane(state) do
     content = Reaction.run_reactions(state)
     receive do
       {:add, compounds} when is_map(compounds) ->
         membrane(%{state | content: Utils.merge_add(content, compounds)})
+
+      {:division_notice, from, children} when is_list(children)->
+        send from, {:kill, :noreply}
+        membrane(%{state | children: List.delete(state.children, from) ++ children})
+
+      {:kill, :noreply} ->
+        true
 
       {:kill, from} ->
         send from, {:add, content}
