@@ -18,6 +18,13 @@ defmodule Membrane do
       {:add, compounds} when is_map(compounds) ->
         membrane(%{state | content: Utils.merge_add(content, compounds)})
 
+      {:add_child, child} ->
+        send child, {:new_parent, self()}
+        membrane(%{state | children: [child | state.children]})
+
+      {:new_parent, parent} ->
+        membrane(%{state | parent: parent})
+
       {:division_notice, from, children} when is_list(children)->
         send from, {:kill, :noreply}
         membrane(%{state | children: List.delete(state.children, from) ++ children})
@@ -47,8 +54,6 @@ defmodule Membrane do
                    content:  Utils.merge_add(state.content, merged_state.content)
                   })
 
-      {:add_child, child} ->
-        membrane(%{state | children: [child | state.children]})
     end
   end
 end
