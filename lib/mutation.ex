@@ -43,7 +43,7 @@ defmodule Mutation do
 
   defp exocytosis(%{children: children, parent: parent}) when length(children) and is_atom(parent) do
     child = Enum.random(children)
-    send parent, {:child_exo, child}
+    send parent, {:add_child, child}
 
     %{children: List.delete(children, child)}
   end
