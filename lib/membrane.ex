@@ -7,7 +7,7 @@ defmodule Membrane do
     skin?: false
   ]
 
-  def compounds, do: [:a, :b, :c, :d, :e]
+  def compounds, do: Application.get_env(:psystem, :compounds)
 
   def init(), do: init(%{parent: self(), skin?: true})
   def init(state), do: spawn_link(fn -> Map.merge(%Membrane{}, state) end)
