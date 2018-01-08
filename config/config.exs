@@ -30,4 +30,5 @@ use Mix.Config
 #     import_config "#{Mix.env}.exs"
 
 config :psystem,
-  compounds: [:a, :b, :c, :d, :e]
+  compounds: [:a, :b, :c, :d, :e],
+  max_depth: 3

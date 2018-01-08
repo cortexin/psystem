@@ -4,12 +4,12 @@ defmodule Membrane do
     reactions: %{},
     children: [],
     parent: nil,
-    skin?: false
+    depth: 0
   ]
 
   def compounds, do: Application.get_env(:psystem, :compounds)
 
-  def init(), do: init(%{parent: self(), skin?: true})
+  def init(), do: init(%{parent: self()})
   def init(state), do: spawn_link(fn -> Map.merge(%Membrane{}, state) end)
 
   defp membrane(state) do

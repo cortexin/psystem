@@ -21,7 +21,7 @@ defmodule Mutation do
   end
   defp merge_children(_), do: %{}
 
-  defp divide_self(state=%{skin?: skin?}) when not skin? do
+  defp divide_self(state=%{depth: depth}) when depth > 0 do
     {children1, children2} = Enum.split(state.children, Enum.random(1..length(state.children)))
     {content1, content2} = Enum.split(state.content, Enum.random(1..Map.size(state.content)))
 
@@ -33,11 +33,15 @@ defmodule Mutation do
   defp divide_self(_), do: %{}
 
   ### PHAGOCYTOSIS
-  defp endocytosis(%{children: children}) when length(children) > 1 do
-    [child, acceptor] = Enum.take_random(children, 2)
-    send acceptor, {:add_child, child}
+  defp endocytosis(%{children: children, depth: depth}) when length(children) > 1 do
+    if Utils.remaining_depth(depth) > 1 do
+      [child, acceptor] = Enum.take_random(children, 2)
+      send acceptor, {:add_child, child}
 
-    %{children: List.delete(children, child)}
+      %{children: List.delete(children, child)}
+    else
+      %{}
+    end
   end
   defp endocytosis(_), do: %{}
 
@@ -51,9 +55,14 @@ defmodule Mutation do
 
   #### CHILD MUTATIONS
   defp spawn_child(state) do
-    IO.puts("Spawning a child")
-    child = spawn_link(fn -> %Membrane{parent: self} end)
-    %{children: [child | state.children]}
+    if Utils.remaining_depth(state.depth) > 0 do
+      IO.puts("Spawning a child")
+      child = spawn_link(fn -> %Membrane{parent: self, depth: state.depth + 1} end)
+      %{children: [child | state.children]}
+    else
+      IO.puts("Can't spawn a child - maximum depth reached")
+      %{}
+    end
   end
 
   defp dissolve_child(%{reactions: reactions, children: children}) do
